@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+{% extends 'testapp/base.html' %}
+{% block body_block %}
+<style>
+    .report-wrapper {
+        max-width: 950px;
+        margin: 30px auto;
+        padding: 0 20px;
+    }
+    .report-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3448;
+        margin-bottom: 4px;
+    }
+    .report-subtitle {
+        font-size: 0.88rem;
+        color: #8a8f9c;
+        margin-bottom: 20px;
+    }
+    .filter-card {
+        background: #fff;
+        border: 1px solid #edf0f5;
+        border-radius: 10px;
+        padding: 20px 22px;
+        margin-bottom: 24px;
+    }
+    .filter-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px 20px;
+        align-items: end;
+    }
+    .filter-grid > div {
+        flex: 1 1 200px;
+    }
+    .filter-grid label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: #3c4257;
+        font-size: 0.88rem;
+    }
+    .filter-grid select,
+    .filter-grid input[type="date"] {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #c3c9d4;
+        border-radius: 6px;
+        font-size: 0.92rem;
+        box-sizing: border-box;
+    }
+    .filter-grid .errorlist {
+        color: #b3261e;
+        font-size: 0.8rem;
+        margin: 4px 0 0;
+        padding-left: 16px;
+    }
+    .btn-search {
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-weight: 600;
+        border: none;
+        background: #4e73df;
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+    .btn-search:hover { background: #3b5bc4; }
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border: 1px solid #edf0f5;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .report-table th, .report-table td {
+        padding: 12px 14px;
+        text-align: left;
+        border-bottom: 1px solid #edf0f5;
+        font-size: 0.9rem;
+    }
+    .report-table th {
+        background: #f7f9fc;
+        color: #6b7280;
+        font-weight: 600;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .stock-low { color: #e74a3b; font-weight: 700; }
+    .stock-ok { color: #1cc88a; font-weight: 700; }
+    .grand-total-row {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 14px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #2c3448;
+    }
+    .empty-msg {
+        text-align: center;
+        color: #8a8f9c;
+        padding: 30px 0;
+        font-size: 0.9rem;
+    }
+    .btn-view {
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        border: none;
+        background: #4e73df;
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.82rem;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-view:hover { background: #3b5bc4; color: #fff; }
+</style>
+
+<div class="report-wrapper">
+    <div class="report-title">Purchase Report</div>
+    <div class="report-subtitle">Item-wise purchase quantity, amount aur current stock dekho</div>
+
+    <div class="filter-card">
+        <form method="get">
+            <div class="filter-grid">
+                <div>
+                    <label for="{{ form.item.id_for_label }}">Item</label>
+                    {{ form.item }}
+                    {{ form.item.errors }}
+                </div>
+                <div>
+                    <label for="{{ form.from_date.id_for_label }}">From Date</label>
+                    {{ form.from_date }}
+                    {{ form.from_date.errors }}
+                </div>
+                <div>
+                    <label for="{{ form.to_date.id_for_label }}">To Date</label>
+                    {{ form.to_date }}
+                    {{ form.to_date.errors }}
+                </div>
+                <div style="flex: 0 0 auto;">
+                    <button type="submit" class="btn-search">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if obj is not None %}
+        {% if obj %}
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Unit</th>
+                    <th>Date</th>
+                    <th>Purchased Qty</th>
+                    <th>Current Stock</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in obj %}
+                <tr>
+                    <td>{{ row.item_name }}</td>
+                    <td>{{row.item_unit_id}}</td>
+                    <td>{{ row.date|date:"d-m-Y" }}</td>
+                    <td>{{ row.quantity }}</td>
+                    <td class="{% if row.current_stock <= 0 %}stock-low{% else %}stock-ok{% endif %}">
+                        {{ row.current_stock }}
+                    </td>
+                    <td>₹{{ row.amount|floatformat:2 }}</td>
+                    <td>
+                        <a class="btn-view" href="/view_purchase_detail_single/{{ row.purchase_mstr_id }}/">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="grand-total-row">Grand Total: ₹{{ grand_total|floatformat:2 }}</div>
+        {% else %}
+        <div class="empty-msg">OOPs No Purchase Report Found...</div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

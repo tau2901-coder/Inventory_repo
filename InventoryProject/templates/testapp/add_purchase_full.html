@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+{% extends 'testapp/base.html' %}
+{% block body_block %}
+<style>
+    .edit-page-wrapper {
+        max-width: 900px;
+        margin: 30px auto;
+        padding: 0 20px;
+    }
+    .edit-page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3448;
+        margin-bottom: 4px;
+    }
+    .edit-page-subtitle {
+        font-size: 0.88rem;
+        color: #8a8f9c;
+        margin-bottom: 14px;
+    }
+    .edit-page-title-bar {
+        border-bottom: 2px solid #4e73df;
+        padding-bottom: 14px;
+        margin-bottom: 26px;
+    }
+    .edit-form-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px 24px;
+    }
+    .edit-form-grid p {
+        flex: 1 1 260px;
+        margin: 0;
+    }
+    .edit-form-grid label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: #3c4257;
+        font-size: 0.9rem;
+    }
+    .edit-form-grid input[type="text"],
+    .edit-form-grid input[type="number"],
+    .edit-form-grid input[type="date"],
+    .edit-form-grid select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #c3c9d4;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        background: #fff;
+        box-sizing: border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .edit-form-grid input:focus,
+    .edit-form-grid select:focus {
+        outline: none;
+        border-color: #4e73df;
+        box-shadow: 0 0 0 3px rgba(78,115,223,0.15);
+    }
+    .edit-form-grid input[readonly] {
+        background: #f4f6fa;
+        color: #5a6274;
+        cursor: not-allowed;
+    }
+    .section-card {
+        background: #fff;
+        border: 1px solid #edf0f5;
+        border-radius: 10px;
+        padding: 22px 24px;
+        margin-bottom: 22px;
+    }
+    .section-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #2c3448;
+        margin-bottom: 16px;
+    }
+    .btn-success {
+        padding: 10px 26px;
+        border-radius: 6px;
+        font-weight: 600;
+        border: none;
+        background: #1cc88a;
+        color: #fff;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-size: 0.92rem;
+    }
+    .btn-success:hover { background: #17a673; }
+    .btn-plus {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        border: none;
+        background: #4e73df;
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 700;
+        cursor: pointer;
+        line-height: 1;
+    }
+    .btn-plus:hover { background: #3b5bc4; }
+    .btn-minus {
+        border: none;
+        background: #e74a3b;
+        color: #fff;
+        border-radius: 5px;
+        padding: 4px 10px;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+    .btn-minus:hover { background: #c9382b; }
+    .btn-edit {
+        border: none;
+        background: #f6c343;
+        color: #3c2f00;
+        border-radius: 5px;
+        padding: 4px 10px;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+    .btn-edit:hover { background: #e0af2c; }
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 18px;
+        font-size: 0.9rem;
+    }
+    .items-table th, .items-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #edf0f5;
+        text-align: left;
+    }
+    .items-table th { color: #8a8f9c; font-weight: 600; }
+    .form-actions-row {
+        margin-top: 30px;
+        padding-top: 18px;
+        border-top: 1px solid #edf0f5;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+    .error-box {
+        background: #fdecea;
+        border: 1px solid #f5c2c0;
+        color: #b3261e;
+        padding: 10px 14px;
+        border-radius: 6px;
+        margin-bottom: 18px;
+        font-size: 0.88rem;
+    }
+    .locked-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 28px;
+        font-size: 0.92rem;
+        color: #3c4257;
+    }
+    .locked-summary span { font-weight: 700; color: #2c3448; }
+</style>
+
+<div class="edit-page-wrapper">
+    <div class="edit-page-title-bar">
+        <div class="edit-page-title">Add Purchase</div>
+        <div class="edit-page-subtitle">Invoice details fill karo, fir items add karke ek hi baar me save karo</div>
+    </div>
+
+    {% if success_invoice_no %}
+    <div class="section-card" style="border-color:#1cc88a; background:#eafaf3;">
+        <div class="section-title" style="color:#17a673;">✅ Purchase Saved</div>
+        <div class="section-title" style="color:#17a653;">Invoice Recipt</div>
+        <div class="locked-summary">
+            <div>Invoice No: <span>{{ success_invoice_no }}</span></div>
+            <div>Supplier: <span>{{ success_name }}</span></div>
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Item</th><th>Qty</th><th>Rate</th><th>Amount (w/o GST)</th><th>GST Amount</th><th>Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for it in success_items %}
+                <tr>
+                    <td>{{ it.item_name }}</td>
+                    <td>{{ it.quantity }}</td>
+                    <td>{{ it.rate }}</td>
+                    <td>{{ it.base_amount|floatformat:2 }}</td>
+                    <td>{{ it.gst_amount|floatformat:2 }}</td>
+                    <td>{{ it.amount|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+                <tr style="font-weight:700;">
+                    <td colspan="5" style="text-align:right;">Total</td>
+                    <td>{{ success_total|floatformat:2 }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="form-actions-row">
+            <button type="button" id="downloadReceiptBtn" class="btn-success" style="background:#f6c343; color:#3c2f00;">⬇ Download Receipt</button>
+            <a href="/add_purchase_full" class="btn-success" style="text-decoration:none; display:inline-block;">+ New Purchase</a>
+            <a href="/view_purchase_deatils" class="btn-success" style="text-decoration:none; display:inline-block; background:#4e73df;">View Purchase Details</a>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+    (function () {
+        const successItems = [
+            {% for it in success_items %}
+            {
+                name: "{{ it.item_name|escapejs }}",
+                qty: {{ it.quantity }},
+                rate: {{ it.rate }},
+                base: {{ it.base_amount }},
+                gst: {{ it.gst_amount }},
+                total: {{ it.amount }}
+            },
+            {% endfor %}
+        ];
+
+        document.getElementById('downloadReceiptBtn').addEventListener('click', function () {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 18;
+
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('Purchase Receipt', 105, y, { align: 'center' });
+            doc.setFont(undefined, 'normal');
+            y += 12;
+
+            doc.setFontSize(11);
+            doc.text('Invoice No: {{ success_invoice_no }}', 14, y);
+            doc.text('Date: {{ success_date|date:"d-m-Y" }}', 130, y);
+            y += 7;
+            doc.text('Supplier: {{ success_name|escapejs }}', 14, y);
+            doc.text('Contact: {{ success_contact|escapejs }}', 130, y);
+            y += 10;
+
+            doc.setFont(undefined, 'bold');
+            doc.text('Item', 14, y);
+            doc.text('Qty', 68, y);
+            doc.text('Rate', 84, y);
+            doc.text('Amt(w/o GST)', 104, y);
+            doc.text('GST Amt', 140, y);
+            doc.text('Total', 170, y);
+            doc.setFont(undefined, 'normal');
+            y += 3;
+            doc.line(14, y, 196, y);
+            y += 6;
+
+            successItems.forEach(function (it) {
+                if (y > 270) { doc.addPage(); y = 20; }
+                doc.text(String(it.name), 14, y);
+                doc.text(String(it.qty), 68, y);
+                doc.text(it.rate.toFixed(2), 84, y);
+                doc.text(it.base.toFixed(2), 104, y);
+                doc.text(it.gst.toFixed(2), 140, y);
+                doc.text(it.total.toFixed(2), 170, y);
+                y += 7;
+            });
+
+            y += 2;
+            doc.line(14, y, 196, y);
+            y += 9;
+            doc.setFont(undefined, 'bold');
+            doc.text('Total Amount: ' + Number({{ success_total }}).toFixed(2), 130, y);
+
+            doc.save('Invoice_{{ success_invoice_no }}.pdf');
+        });
+    })();
+    </script>
+    {% endif %}
+
+    {% if errors %}
+    <div class="error-box">
+        {% for e in errors %}<div>{{ e }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not success_invoice_no %}
+    <!-- STEP 1: INVOICE / SUPPLIER DETAILS -->
+    <div class="section-card" id="masterSection">
+        <div class="section-title">1. Invoice Details</div>
+        <div class="edit-form-grid">
+            <p>
+                <label for="master_invoice_no">Invoice No</label>
+                <input type="number" id="master_invoice_no" value="{{ default_invoice_no }}">
+            </p>
+            <p>
+                <label for="master_invoice_date">Invoice Date</label>
+                <input type="date" id="master_invoice_date">
+            </p>
+            <p>
+                <label for="master_name">Supplier Name</label>
+                <input type="text" id="master_name" placeholder="Supplier Name">
+            </p>
+            <p>
+                <label for="master_contact">Contact No</label>
+                <input type="text" id="master_contact" placeholder="Contact No">
+            </p>
+            <p>
+                <label for="master_gst">GST</label>
+                <select id="master_gst">
+                    <option value="12">12%</option>
+                    <option value="15">15%</option>
+                    <option value="18" selected>18%</option>
+                </select>
+            </p>
+        </div>
+        <div class="form-actions-row">
+            <button type="button" id="lockMasterBtn" class="btn-success">Confirm &amp; Continue</button>
+        </div>
+    </div>
+
+    <!-- LOCKED MASTER SUMMARY -->
+    <div class="section-card" id="masterSummary" style="display:none;">
+        <div class="section-title">
+            Invoice <span style="font-weight:400; color:#8a8f9c; font-size:0.8rem;">(locked)</span>
+            <button type="button" id="editMasterBtn" class="btn-minus" style="float:right; font-size:0.75rem;">Edit</button>
+        </div>
+        <div class="locked-summary">
+            <div>Invoice No: <span id="sum_invoice_no"></span></div>
+            <div>Date: <span id="sum_invoice_date"></span></div>
+            <div>Supplier: <span id="sum_name"></span></div>
+            <div>Contact: <span id="sum_contact_no"></span></div>
+            <div>GST: <span id="sum_gst"></span>%</div>
+        </div>
+    </div>
+
+    <!-- STEP 2: ADD PURCHASE DETAILS (items) -->
+    <div class="section-card" id="detailsSection" style="display:none;">
+        <div class="section-title">2. Add Items</div>
+
+        <div class="edit-form-grid" id="detailFormGrid">
+            <p>
+                <label for="detail_item">Item</label>
+                <select id="detail_item">
+                    <option value="">-- Select Item --</option>
+                </select>
+            </p>
+            <p>
+                <label for="detail_qty">Quantity</label>
+                <input type="number" id="detail_qty" min="1" value="1">
+            </p>
+            <p>
+                <label for="detail_rate">Rate</label>
+                <input type="text" id="detail_rate" readonly placeholder="Item select karte hi aayega">
+            </p>
+            <p>
+                <label for="detail_base_amount">Amount (without GST)</label>
+                <input type="text" id="detail_base_amount" readonly>
+            </p>
+            <p>
+                <label for="detail_gst_amount">GST Amount (<span id="gstPercentLabel">18</span>%)</label>
+                <input type="text" id="detail_gst_amount" readonly>
+            </p>
+            <p>
+                <label for="detail_amount">Total Amount</label>
+                <input type="text" id="detail_amount" readonly>
+            </p>
+        </div>
+
+        <div class="form-actions-row">
+            <button type="button" id="addItemBtn" class="btn-plus" title="Add item to list">+</button>
+        </div>
+
+        <table class="items-table" id="itemsTable" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Item</th><th>Qty</th><th>Rate</th><th>Amount (w/o GST)</th><th>GST Amount</th><th>Total Amount</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="itemsTableBody"></tbody>
+        </table>
+
+        <div class="form-actions-row">
+            <button type="button" id="finalAddBtn" class="btn-success" style="display:none;">Save Purchase</button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if not success_invoice_no %}
+<!-- Real form that POSTs everything to the server, in one shot -->
+<form id="finalForm" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="invoice_no" id="hidden_invoice_no">
+    <input type="hidden" name="invoice_date" id="hidden_invoice_date">
+    <input type="hidden" name="name" id="hidden_name">
+    <input type="hidden" name="contact_no" id="hidden_contact_no">
+    <input type="hidden" name="gst" id="hidden_gst">
+    <div id="hiddenItemsWrapper"></div>
+</form>
+
+<script>
+(function () {
+    const DRAFT_KEY = 'purchase_full_draft_v1';
+
+    const allItems = [
+        {% for item in items %}
+        { id: "{{ item.id }}", name: "{{ item.name|escapejs }}", rate: {{ item.rate }} },
+        {% endfor %}
+    ];
+
+    function loadDraft() {
+        try {
+            return JSON.parse(localStorage.getItem(DRAFT_KEY)) || { master: null, items: [] };
+        } catch (e) {
+            return { master: null, items: [] };
+        }
+    }
+    function saveDraft(draft) {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    }
+
+    let draft = loadDraft();
+    let editingIndex = null; // null = "add new" mode, otherwise index in draft.items being edited
+
+    const masterInvoiceNo = document.getElementById('master_invoice_no');
+    const masterInvoiceDate = document.getElementById('master_invoice_date');
+    const masterName = document.getElementById('master_name');
+    const masterContact = document.getElementById('master_contact');
+    const masterGst = document.getElementById('master_gst');
+
+    const masterSection = document.getElementById('masterSection');
+    const masterSummary = document.getElementById('masterSummary');
+    const detailsSection = document.getElementById('detailsSection');
+    const itemsTable = document.getElementById('itemsTable');
+    const itemsTableBody = document.getElementById('itemsTableBody');
+    const finalAddBtn = document.getElementById('finalAddBtn');
+
+    function renderMasterSummary(m) {
+        document.getElementById('sum_invoice_no').textContent = m.invoice_no;
+        document.getElementById('sum_invoice_date').textContent = m.invoice_date;
+        document.getElementById('sum_name').textContent = m.name;
+        document.getElementById('sum_contact_no').textContent = m.contact_no;
+        document.getElementById('sum_gst').textContent = m.gst;
+        document.getElementById('gstPercentLabel').textContent = m.gst;
+        masterSection.style.display = 'none';
+        masterSummary.style.display = 'block';
+        detailsSection.style.display = 'block';
+    }
+
+    function renderItemsTable() {
+        itemsTableBody.innerHTML = '';
+        if (draft.items.length === 0) {
+            itemsTable.style.display = 'none';
+            finalAddBtn.style.display = 'none';
+            return;
+        }
+        itemsTable.style.display = 'table';
+        finalAddBtn.style.display = 'inline-block';
+        draft.items.forEach(function (it, idx) {
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td>' + it.item_name + '</td>' +
+                '<td>' + it.quantity + '</td>' +
+                '<td>' + it.rate + '</td>' +
+                '<td>' + it.base_amount + '</td>' +
+                '<td>' + it.gst_amount + '</td>' +
+                '<td>' + it.amount + '</td>' +
+                '<td style="white-space:nowrap;">' +
+                    '<button type="button" class="btn-edit" data-edit-idx="' + idx + '">Edit</button> ' +
+                    '<button type="button" class="btn-minus" data-idx="' + idx + '">-</button>' +
+                '</td>';
+            itemsTableBody.appendChild(tr);
+        });
+        itemsTableBody.querySelectorAll('.btn-minus').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const idx = parseInt(this.getAttribute('data-idx'), 10);
+                draft.items.splice(idx, 1);
+                if (editingIndex === idx) {
+                    resetDetailForm();
+                } else {
+                    if (editingIndex !== null && editingIndex > idx) editingIndex -= 1;
+                    refreshItemSelect();
+                }
+                saveDraft(draft);
+                renderItemsTable();
+            });
+        });
+        itemsTableBody.querySelectorAll('[data-edit-idx]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                editItem(parseInt(this.getAttribute('data-edit-idx'), 10));
+            });
+        });
+    }
+
+    // ---- lock master details, move to items step ----
+    document.getElementById('lockMasterBtn').addEventListener('click', function () {
+        if (!masterInvoiceNo.value || !masterInvoiceDate.value || !masterName.value) {
+            alert('Invoice No, Date aur Supplier Name bharo.');
+            return;
+        }
+        draft.master = {
+            invoice_no: masterInvoiceNo.value,
+            invoice_date: masterInvoiceDate.value,
+            name: masterName.value,
+            contact_no: masterContact.value,
+            gst: masterGst.value
+        };
+        saveDraft(draft);
+        renderMasterSummary(draft.master);
+    });
+
+    // ---- edit master again ----
+    document.getElementById('editMasterBtn').addEventListener('click', function () {
+        if (draft.master) {
+            masterInvoiceNo.value = draft.master.invoice_no;
+            masterInvoiceDate.value = draft.master.invoice_date;
+            masterName.value = draft.master.name;
+            masterContact.value = draft.master.contact_no;
+            masterGst.value = draft.master.gst || '18';
+        }
+        masterSection.style.display = 'block';
+        masterSummary.style.display = 'none';
+        detailsSection.style.display = 'none';
+    });
+
+    // ---- STEP 2: item picker (already-added items dropdown se hatt jaate hain) ----
+    const itemSelect = document.getElementById('detail_item');
+    const qtyInput = document.getElementById('detail_qty');
+    const rateInput = document.getElementById('detail_rate');
+    const baseAmountInput = document.getElementById('detail_base_amount');
+    const gstAmountInput = document.getElementById('detail_gst_amount');
+    const amountInput = document.getElementById('detail_amount');
+    const addItemBtn = document.getElementById('addItemBtn');
+    function getSelectedGst() {
+        return (draft.master && draft.master.gst) ? parseFloat(draft.master.gst) : 18;
+    }
+
+    function refreshItemSelect() {
+        const usedIds = draft.items
+            .map(function (it, idx) { return idx === editingIndex ? null : String(it.item_id); })
+            .filter(function (id) { return id !== null; });
+
+        const currentValue = itemSelect.value;
+        itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+        allItems.forEach(function (item) {
+            if (usedIds.indexOf(String(item.id)) !== -1) return;
+            const opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.name;
+            opt.setAttribute('data-rate', item.rate);
+            itemSelect.appendChild(opt);
+        });
+        if (currentValue && itemSelect.querySelector('option[value="' + currentValue + '"]')) {
+            itemSelect.value = currentValue;
+        }
+    }
+
+    function updateRateAndAmount() {
+        const selected = itemSelect.options[itemSelect.selectedIndex];
+        const rate = selected ? parseFloat(selected.getAttribute('data-rate')) : NaN;
+        rateInput.value = isNaN(rate) ? '' : rate;
+        const qty = parseFloat(qtyInput.value) || 0;
+        if (isNaN(rate)) {
+            baseAmountInput.value = '';
+            gstAmountInput.value = '';
+            amountInput.value = '';
+            return;
+        }
+        const baseAmount = qty * rate;
+        const gstPercent = getSelectedGst();
+        const gstAmount = baseAmount * gstPercent / 100;
+        baseAmountInput.value = baseAmount.toFixed(2);
+        gstAmountInput.value = gstAmount.toFixed(2);
+        amountInput.value = (baseAmount + gstAmount).toFixed(2);
+    }
+    itemSelect.addEventListener('change', updateRateAndAmount);
+    qtyInput.addEventListener('input', updateRateAndAmount);
+
+    function resetDetailForm() {
+        editingIndex = null;
+        itemSelect.value = '';
+        qtyInput.value = 1;
+        rateInput.value = '';
+        baseAmountInput.value = '';
+        gstAmountInput.value = '';
+        amountInput.value = '';
+        addItemBtn.textContent = '+';
+        addItemBtn.title = 'Add item to list';
+        refreshItemSelect();
+    }
+
+    function editItem(idx) {
+        const it = draft.items[idx];
+        editingIndex = idx;
+        refreshItemSelect();
+        itemSelect.value = it.item_id;
+        qtyInput.value = it.quantity;
+        updateRateAndAmount();
+        addItemBtn.textContent = '\u2713 Update';
+        addItemBtn.title = 'Update this item';
+        detailsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // ---- restore draft on page load ----
+    if (draft.master) {
+        renderMasterSummary(draft.master);
+    }
+    refreshItemSelect();
+    if (draft.items && draft.items.length) {
+        renderItemsTable();
+    }
+
+    // ---- + Add / Update item ----
+    addItemBtn.addEventListener('click', function () {
+        if (!itemSelect.value) {
+            alert('Item select karo.');
+            return;
+        }
+        const qty = parseFloat(qtyInput.value);
+        if (!qty || qty <= 0) {
+            alert('Valid quantity daalo.');
+            return;
+        }
+        const selected = itemSelect.options[itemSelect.selectedIndex];
+        const entry = {
+            item_id: itemSelect.value,
+            item_name: selected.textContent,
+            quantity: qty,
+            rate: rateInput.value,
+            base_amount: baseAmountInput.value,
+            gst_amount: gstAmountInput.value,
+            gst: getSelectedGst(),
+            amount: amountInput.value
+        };
+
+        if (editingIndex !== null) {
+            draft.items[editingIndex] = entry;
+        } else {
+            draft.items.push(entry);
+        }
+        saveDraft(draft);
+        renderItemsTable();
+        resetDetailForm();
+    });
+
+    // ---- Save Purchase: push master + items into real form and submit ----
+    finalAddBtn.addEventListener('click', function () {
+        if (!draft.master || draft.items.length === 0) {
+            alert('Invoice details dobara bharo aur kam se kam ek item add karo.');
+            localStorage.removeItem(DRAFT_KEY);
+            location.reload();
+            return;
+        }
+
+        document.getElementById('hidden_invoice_no').value = draft.master.invoice_no;
+        document.getElementById('hidden_invoice_date').value = draft.master.invoice_date;
+        document.getElementById('hidden_name').value = draft.master.name;
+        document.getElementById('hidden_contact_no').value = draft.master.contact_no;
+        document.getElementById('hidden_gst').value = draft.master.gst;
+
+        const wrapper = document.getElementById('hiddenItemsWrapper');
+        wrapper.innerHTML = '';
+        draft.items.forEach(function (it) {
+            ['item_id', 'quantity', 'gst'].forEach(function (key) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key + '[]';
+                input.value = it[key];
+                wrapper.appendChild(input);
+            });
+        });
+
+        localStorage.removeItem(DRAFT_KEY);
+        document.getElementById('finalForm').submit();
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}
